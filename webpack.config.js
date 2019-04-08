@@ -74,6 +74,8 @@ const config = {
 }
 
 if (isDev) {
+    // 帮助在浏览器中调试
+    config.devtool = '#cheap-module-eval-source-map' 
     //这个devServer的配置是在webpack2.x以后引入的,1.x是没有的
     config.devServer = {
         //访问的端口号

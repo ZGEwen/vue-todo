@@ -119,3 +119,23 @@ NODE_ENV就是这个环境变量,在linux下 直接NODE_ENV=production,在window
 
 `npm i html-webpack-plugin@2.30.1 `
 
+#### config.devtool
+
+帮助开发者在页面上调试代码。.vue和ES6的代码无法直接在浏览器中运行，直接在浏览器中调试，代码是经过编译过后的，无法直接找到自己写的内容。
+
+使用代码映射。`config.devtool = '#cheap-module-eval-source-map'  `
+
+## VUE2介绍
+
+### 数据绑定
+
+把JavaScript中object的数据直接绑定到html上，数据发生改变时，html中的内容也会发生改变
+
+### VUE文件开发方式
+
+组件化的框架
+
+### render方法
+
+用以更新html内容
+
