@@ -1,9 +1,10 @@
 import Vue from 'vue'
 import App from './app.vue'
 
-import './assets/images/bg.jpeg'
-import './assets/styles/test.css'
-import './assets/styles/test-stylus.styl'
+// import './assets/images/bg.jpeg'
+// import './assets/styles/test.css'
+// import './assets/styles/test-stylus.styl'
+import './assets/styles/global.styl'
 
 //创建div节点，并将div节点添加到body中
 const root = document.createElement('div')

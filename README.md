@@ -139,3 +139,64 @@ NODE_ENV就是这个环境变量,在linux下 直接NODE_ENV=production,在window
 
 用以更新html内容
 
+### API重点
+
+生命周期方法：组件的编译，加载，销毁
+
+computed：对于reactive更深入的使用
+
+## 项目搭建
+
+安装postcss等： `npm i post i postcss-loader@2.0.9 autoprefixer@7.2.3 babel-loader@7.1.2 babel-core@6.26.0`
+
+在根目录下创建配置文件：`.babelrc`配置babel  `postcss.config.js`配置postcss
+
+postcss后处理css文件，css已经编译完成了，使用postcss优化css代码
+
+babelrc：处理.jsx文件。需要安装`npm i babel-helper-vue-jsx-merge-props@^2.0.0 babel-plugin-syntax-jsx@^6.8.0` `npm i babel-preset-env@1.6.1 babel-plugin-transform-vue-jsx@3.5.0`，并在webpack配置中加上相应的配置。
+
+1. 新建todo文件夹，创建header.vue文件和其他组件。
+2. 新建样式，并在index.js中引入。
+3. 虚化背景。PS：vue的template中必须有一个独立的外部节点，不能在template存在两个并列的节点
+4. 在app中引入header组件，并在componts中进行声明，这样就可以在templae中进行使用
+
+数据操作放到顶层中，**注意书写格式，否则会出现莫名错误**。
+
+## 配置CSS单独分离打包
+
+1. 安装：`npm i extract-text-webpack-plugin@^3.0.2`
+
+2. 在`webpack.config.js`中引入`extract-text-webpack-plugin` 将非js的单独打包成静态资源文件
+
+   ```js
+   const ExtractPlugin = require("extract-text-webpack-plugin")
+   ```
+
+3. 区分配置`webpack.config.js中`的开发环境和正式环境。vue中的样式并没有打包到css文件中。
+
+4. 使用`npm run build`打包。
+
+## 区分打包类库代码及hash优化
+
+希望浏览器尽可能长的缓存静态文件，类库代码比较稳定，业务代码经常更新迭代，希望利用浏览器更长时间的缓存来减少服务器的流量和提升用户的加载速度，单独出来进行打包。
+
+```js
+config.entry = {
+   app: path.join(__dirname,'src/index.js'),
+   vendor: ['vue'] 
+}
+config.plugins.push(
+        new ExtractPlugin('styles.[contentHash:8].css'),//定义打包分离出的css文件名
+        new webpack.optimize.CommonsChunkPlugin({//定义静态文件打包
+            name: 'vendor'
+        })
+)
+```
+
+```js
+ new webpack.optimize.CommonsChunkPlugin({
+ //将app.js文件中一些关于webpack文件的配置单独打包出为一个文件,在有新的模块加入时，webpack给每个模块加上id，此时加入的模块顺序可能是在中间，会导致后边的每一个模块的id都发生变化，会导致打包出来的hash发生一定的变化，想要浏览器长缓存的作用就失去了效果，使用这个方法用于解决部分浏览器长缓存问题.注意;要放到vendor的后边。
+    name: 'runtime'
+})
+```
+

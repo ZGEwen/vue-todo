@@ -7,6 +7,9 @@ const isDev = process.env.NODE_ENV === "development"
 const HTMLPlugin = require('html-webpack-plugin')
 //引入webpack
 const webpack = require("webpack")
+
+const ExtractPlugin = require("extract-text-webpack-plugin")
+
 const config = {
     //设置webpack的编译目标是web平台
    target: "web",
@@ -14,7 +17,7 @@ const config = {
    entry: path.join(__dirname,'src/index.js'),
     // 输出 将挂载的App全部打包成一个bundle.js,在浏览器中可以直接运行的代码  
    output:{
-       filename: 'bundle.js',
+       filename: 'bundle.[hash:8].js',
        path: path.join(__dirname,'dist')
    },
    module:{
@@ -27,23 +30,19 @@ const config = {
                loader: 'vue-loader'
            },
            {
-               test: /\.css$/,
-               use:[
-                   //将css的样式写入到html里面去,以一段js代码出现
-                   'style-loader',
-                   //处理css文件，读取css文件内容
-                   'css-loader'
-               ]
-           },
-           {
-               test: /\.styl/,
-               use:[
-                   'style-loader',
-                   'css-loader',
-                //  处理.styl文件，处理之后是css文件，交给上一层处理  
-                   'stylus-loader'
-               ]
-           },
+                //处理.jsx文件
+                test: /\.jsx$/,
+                loader: 'babel-loader'                  //处理jsx文件
+            },
+        //    {
+        //        test: /\.css$/,
+        //        use:[
+        //            //将css的样式写入到html里面去,以一段js代码出现
+        //            'style-loader',
+        //            //处理css文件，读取css文件内容
+        //            'css-loader'
+        //        ]
+        //    },
            {    //处理图片
                 test: /\.(gif|jpg|jpeg|png|svg)$/,
                 use:[
@@ -69,11 +68,32 @@ const config = {
                 NODE_ENV: isDev ? '"development"' : '"production"'
             }
         }),
-        new HTMLPlugin()
+        new HTMLPlugin({
+            title: 'Todo'
+        })
    ]
 }
 
 if (isDev) {
+    config.module.rules.push(
+        {
+            test: /\.styl/,
+            use: [
+                'style-loader',
+                'css-loader',
+                {
+                    
+                     loader: 'postcss-loader',
+                     options: {
+                         //stylus-loader和postcss-loader自己都会生成sourceMap,如果前面stylus-loader已生成了sourceMap
+                         sourceMap: true,
+                     }//那么postcss-loader可以直接引用前面的sourceMap
+                 },
+                 //  处理.styl文件，处理之后是css文件，交给上一层处理  
+                'stylus-loader'
+            ]
+        }
+    )
     // 帮助在浏览器中调试
     config.devtool = '#cheap-module-eval-source-map' 
     //这个devServer的配置是在webpack2.x以后引入的,1.x是没有的
@@ -94,6 +114,46 @@ if (isDev) {
     config.plugins.push(
         new webpack.HotModuleReplacementPlugin(),
         new webpack.NoEmitOnErrorsPlugin()
+    )
+}else{
+    config.entry = {
+        app: path.join(__dirname,'src/index.js'),
+        vendor: ['vue']   
+    }
+    //此处一定是chunkhash,因为用hash时app和vendor的hash码是一样的了,这样每次业务代码更新,vendor也会更新,也就没有了意义.
+    config.output.filename = '[name].[chunkhash:8].js'
+    config.module.rules.push(
+        {
+            test: /\.styl/,
+            use: ExtractPlugin.extract({
+                fallback: 'style-loader',
+                use: [
+                    //css-loader处理css
+                    'css-loader',
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            //stylus-loader和postcss-loader自己都会生成sourceMap,如果前面stylus-loader已生成了sourceMap
+                            sourceMap: true,
+                        }//那么postcss-loader可以直接引用前面的sourceMap
+                    },
+                    //处理stylus的css预处理器的问题件,转换成css后,抛给上一层的css-loader
+                    'stylus-loader'
+                ]
+            })
+        },
+    ), 
+    config.plugins.push(
+        //定义打包分离出的css文件名
+        new ExtractPlugin('styles.[contentHash:8].css'),
+        new webpack.optimize.CommonsChunkPlugin({
+            //定义静态文件打包
+            name: 'vendor'
+        }),
+        new webpack.optimize.CommonsChunkPlugin({
+            //将app.js文件中一些关于webpack文件的配置单独打包出为一个文件,用于解决部分浏览器长缓存问题   
+            name: 'runtime'
+        })
     )
 }
 
