@@ -200,3 +200,7 @@ config.plugins.push(
 })
 ```
 
+## 总结
+
+1. webpack
+2. vue的重点不是api和指令，而是过程
